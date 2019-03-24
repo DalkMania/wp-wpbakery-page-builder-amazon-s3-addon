@@ -21,10 +21,11 @@ if (!class_exists('WPB_AWS_S3_ADDON')) {
         {
             //Actions
             add_action('admin_notices', [$this, 'is_wp_offload_s3_installed'], 10);
+            add_action('admin_notices', [$this, 'is_wpbakery_installed'], 10);
             add_action('init', [$this, 'remove_wpbakery_actions'], 10);
         }
 
-        public static function is_wp_offload_s3_installed()
+        public function is_wp_offload_s3_installed()
         {
             global $pagenow, $page;
             $message = '';
@@ -45,10 +46,33 @@ if (!class_exists('WPB_AWS_S3_ADDON')) {
             }
         }
 
+        public function is_wpbakery_installed() {
+            global $pagenow, $page;
+            $message = '';
+
+            if ($pagenow != 'plugins.php') {
+                return;
+            }
+
+            if( defined( 'WPB_VC_VERSION' ) ) {
+                // Plugin is installed and acrive
+                return;
+            } else {
+                $message .= '<h2><a href="https://wpbakery.com/">WPBakery Page Builder</a> is required.</h2><p>You do not have the WPBakery Page Builder plugin enabled. <a href="https://wpbakery.com/">Get WPBakery Page Builder</a>.</p>';
+            }
+
+            if (!empty($message)) {
+                echo '<div id="message" class="error">' . $message . '</div>';
+            }
+
+        }
+
         public function remove_wpbakery_actions()
-        {
-            remove_action('wp_head', array(visual_composer(), 'addFrontCss'), 1000);
-            add_action('wp_head', array($this, 'addS3FrontCss'), 1000);
+        {   
+            if( defined( 'WPB_VC_VERSION' ) ) {
+                remove_action('wp_head', array(visual_composer(), 'addFrontCss'), 1000);
+                add_action('wp_head', array($this, 'addS3FrontCss'), 1000);
+            }
         }
 
         public function addS3FrontCss()
